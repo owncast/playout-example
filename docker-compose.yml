@@ -1,0 +1,38 @@
+---
+version: '3.6'
+
+services:
+    owncast:
+        container_name: "owncast_server"
+        image: "gabekangas/owncast:latest"
+        entrypoint: sh /app/run-server.sh
+        restart: unless-stopped
+        volumes:
+        - ./run-server.sh:/app/run-server.sh
+        - ./owncast-data:/app/data
+        networks:
+            - ffplayout-network
+        ports:
+        - "8080:8080"
+    ffplayout:
+        container_name: ffplayout
+        build: ffplayout/.
+        volumes:
+            - "./ffplayout/ffplayout.yml:/etc/ffplayout/ffplayout.yml"
+            - "./logs:/logs"
+            - "./video:/video"
+            - "/etc/localtime:/etc/localtime:ro"
+            - "/etc/timezone:/etc/timezone:ro"
+            # - "./logo.png:/usr/share/ffplayout/logo.png:ro"
+        depends_on:
+            - owncast
+        networks:
+            - ffplayout-network
+        ports:
+            - "8787:8787"
+        restart: unless-stopped
+
+networks:
+    ffplayout-network:
+        name: ffplayout-network
+        driver: bridge
